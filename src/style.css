@@ -1,16 +1,7 @@
-:root {
-    --shadow: 6.7px 6.7px 5.3px rgba(0, 0, 0, 0.028), 22.3px 22.3px 17.9px rgba(0, 0, 0, 0.042), 100px 100px 80px rgba(0, 0, 0, 0.07)
-}
-
 body {
     background: rgb(235 240 245);
 }
 
-@media screen and (max-width: 1280px) {
-    body {
-        transform: scale(0.9);
-    }
-}
 
 
 p {
@@ -18,17 +9,8 @@ p {
 }
 
 
-.title {
-    font-size: 2em;
-    text-align: center;
-}
-
 .frame {
-    display: flex;
-    height: 100vh;
-    justify-content: center;
-    align-items: center;
-    gap: 8em;
+
 }
 
 .result {
@@ -53,7 +35,6 @@ p {
 }
 
 .canvas {
-    margin: 2em 0;
 }
 
 .canvas__title {
@@ -67,9 +48,6 @@ p {
     display: block;
     margin: auto;
     background: #fff;
-    border-radius: 1.5em;
-    overflow: hidden;
-    box-shadow: var(--shadow);
 }
 
 
@@ -78,12 +56,6 @@ p {
     height: 3em;
 }
 
-.controller__desc {
-    margin: .5em 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    text-align: center;
-}
 
 
 dialog {

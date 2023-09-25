@@ -27,7 +27,19 @@ const images = [
 
 
 
+const windowWidth = document.querySelector("html").clientWidth;
+const windowHeight = document.querySelector("html").clientHeight;
+
+playerCanvas.width = windowWidth;
+playerCanvas.height = windowHeight;
+
+
 async function main() {
+
+    console.log(window.innerWidth);
+    console.log(windowWidth);
+
+
     // handsの初期化
     const hands = new Hands({
         locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
@@ -83,8 +95,8 @@ async function main() {
         await navigator.mediaDevices.getUserMedia({
             video: {
                 deviceId: select.value,
-                width: 768,
-                height: 576
+                width: windowWidth,
+                height: windowHeight    
             },
             audio: false,
         })

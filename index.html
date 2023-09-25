@@ -10,26 +10,25 @@
 </head>
 <body>
     <div class="frame">
+        
         <div>
-            <h1 class="title">カメラに手をかざして<br>じゃんけん！</h1>
+            <div class="canvas">
+                <video id="video" hidden></video>
+                <canvas class="canvas__body" id="player-canvas"></canvas>
+            </div>
+            <div class="result" id="result"></div>
+        </div>
+        <div>
             <div class="canvas">
                 <div class="canvas__title">CPU</div>
                 <canvas class="canvas__body" id="cpu-canvas" width="304" height="304"></canvas>
             </div>
-            <div class="controller">
-                <meter class="controller__meter" id="meter" min="0" max="75" value="0"></meter>
-                <div class="controller__desc">グーをかざしてメーターが溜まったら<br>じゃんけん開始！</div>
-            </div>
+            
         </div>
-        <div>
-            <div class="canvas">
-                <div class="canvas__title">Player</div>
-                <video id="video" hidden></video>
-                <canvas class="canvas__body" id="player-canvas" width="768" height="576"></canvas>
-            </div>
-            <div class="result" id="result"></div>
-        </div>
+        <meter class="controller__meter" id="meter" min="0" max="75" value="0"></meter>
     </div>
+
+    
     <dialog id="dialog">
         <h2>設定</h2>
         <p>使用するカメラを選択： <select id="camera-devices"></select></p>
