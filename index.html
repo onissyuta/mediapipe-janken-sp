@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カメラでじゃんけん</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+    <div class="frame">
+        <div>
+            <h1 class="title">カメラに手をかざして<br>じゃんけん！</h1>
+            <div class="canvas">
+                <div class="canvas__title">CPU</div>
+                <canvas class="canvas__body" id="cpu-canvas" width="304" height="304"></canvas>
+            </div>
+            <div class="controller">
+                <meter class="controller__meter" id="meter" min="0" max="75" value="0"></meter>
+                <div class="controller__desc">グーをかざしてメーターが溜まったら<br>じゃんけん開始！</div>
+            </div>
+        </div>
+        <div>
+            <div class="canvas">
+                <div class="canvas__title">Player</div>
+                <video id="video" hidden></video>
+                <canvas class="canvas__body" id="player-canvas" width="768" height="576"></canvas>
+            </div>
+            <div class="result" id="result"></div>
+        </div>
+    </div>
+    <dialog id="dialog">
+        <h2>設定</h2>
+        <p>使用するカメラを選択： <select id="camera-devices"></select></p>
+        <p style="font-size: .8em;">ブラウザの設定でカメラへのアクセスを許可してください。</p>
+        <p><button id="startBtn" type="button">はじめる</button></p>
+    </dialog>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="src/script.js"></script>
+</body>
+</html>
