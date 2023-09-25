@@ -10,7 +10,9 @@ p {
 
 
 .frame {
-
+    width: 360px;
+    display: flex;
+    flex-direction: column;
 }
 
 .result {

@@ -1,3 +1,6 @@
+import { Camera } from "https://code4fukui.github.io/Camera/Camera.js";
+
+
 document.addEventListener("DOMContentLoaded", main, false);
 
 let playerHand;
@@ -13,6 +16,9 @@ const cpuCtx = cpuCanvas.getContext("2d");
 const meter = document.getElementById("meter");
 const divResult = document.getElementById("result");
 
+const debug = document.querySelector("#debug");
+const debug2 = document.querySelector("#debug2");
+
 
 const audio = [
     [loadAudio("src/audio/janken.wav"), loadAudio("src/audio/pon.wav")],
@@ -27,17 +33,72 @@ const images = [
 
 
 
-const windowWidth = document.querySelector("html").clientWidth;
-const windowHeight = document.querySelector("html").clientHeight;
-
-playerCanvas.width = windowWidth;
-playerCanvas.height = windowHeight;
-
 
 async function main() {
 
-    console.log(window.innerWidth);
-    console.log(windowWidth);
+    const windowWidth = document.querySelector("html").clientWidth;
+    const windowHeight = document.querySelector("html").clientHeight;
+
+    // const video = document.getElementById("video"); // なくても何故が動く
+    let camera = null;
+
+    
+    if (camera) {
+        await camera.stop();
+    }
+    camera = new Camera(video, {
+        onFrame: async () => {
+        // use video element as image
+            await hands.send({ image: video });
+        },
+        backcamera: chkback.checked,
+        fps: 24,
+        width: 360,
+        height: 360
+    });
+    await camera.start();
+    console.log(camera);
+
+
+
+    btnstop.onclick = async () => {
+        debug2.textContent += camera.videoElement.clientWidth;
+        debug2.textContent += camera.videoElement.clientHeight;
+
+        playerCanvas.width = camera.videoElement.clientWidth;
+        playerCanvas.height = camera.videoElement.clientHeight;
+
+
+        // if (camera) {
+        //     await camera.stop();
+        //     camera = null;
+        // }
+    };
+    chkback.onchange = async () => {
+        if (camera) {
+            await camera.flip();
+        }
+    };
+    chkmirror.onchange = () => {
+        video.style.transform = chkmirror.checked ? "scale(-1,1)" : "scale(1,1)";
+    };
+
+
+
+
+    // // カメラの初期化
+    // const video = document.getElementById("video");
+    // const camera = new Camera(video, {
+    //     onFrame: async () => {
+    //         await hands.send({ image: video });
+    //     },
+    //     width: 360,
+    //     height: 500,
+    //     backcamera: true,
+    // });
+    // console.log(camera);
+    // camera.start()
+
 
 
     // handsの初期化
@@ -45,82 +106,14 @@ async function main() {
         locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
     });
     hands.setOptions({
-        selfieMode: true,
+        selfieMode: false,
         maxNumHands: 1,
         modelComplexity: 1,
         minDetectionConfidence: 0.5,
         minTrackingConfidence: 0.5
     });
+
     hands.onResults(recvResults);
-
-
-    const video = document.getElementById('video');
-    const dialog = document.getElementById('dialog');
-    const select = document.getElementById('camera-devices');
-
-    dialog.showModal();
-
-
-    // カメラの一覧を取得
-    await navigator.mediaDevices.getUserMedia({ video: true, audio: false }) // 権限要求のため一瞬カメラをオンにする
-        .then(stream => {
-            // カメラ停止
-            stream.getTracks().forEach(track => {
-                track.stop();
-            })
-
-            // 入出力デバイスの取得
-            navigator.mediaDevices.enumerateDevices().then(mediaDevices => {
-                console.log(mediaDevices);
-                let count = 1;
-                mediaDevices.forEach(mediaDevice => {
-                    if (mediaDevice.kind === 'videoinput') {
-                        const option = document.createElement('option');
-                        option.value = mediaDevice.deviceId;
-                        const textNode = document.createTextNode(mediaDevice.label || `Camera ${count++}`);
-                        option.appendChild(textNode);
-                        select.appendChild(option);
-                    }
-                });
-            });
-        })
-        .catch(error => alert("エラーが発生しました:\n・カメラアクセスが許可されていません\n・他のアプリでカメラが使用されています"));
-
-
-    // カメラの起動
-    document.getElementById('startBtn').addEventListener('click', async () => {
-        dialog.close();
-        console.log(select.value)
-
-        await navigator.mediaDevices.getUserMedia({
-            video: {
-                deviceId: select.value,
-                width: windowWidth,
-                height: windowHeight    
-            },
-            audio: false,
-        })
-            .then(
-                stream => {
-                    video.srcObject = stream;
-                    video.play();
-                },
-                error => {
-                    alert("エラーが発生しました:\n他のアプリでカメラが使用されています");
-                    console.log(error);
-                }
-            )
-            .then(() => {
-                sendHandsImage();
-            })
-    });
-
-
-    const sendHandsImage = async () => {
-        await hands.send({ image: video })
-        requestAnimationFrame(sendHandsImage);
-    }
-
 
 }
 
@@ -129,28 +122,28 @@ function recvResults(results) {
     playerCtx.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
     playerCtx.drawImage(results.image, 0, 0, playerCanvas.width, playerCanvas.height);
 
-    playerCtx.rect(0, 0, playerCanvas.width, 48);
-    playerCtx.fillStyle = "rgba(0, 0, 0, .5)";
-    playerCtx.fill();
+    // playerCtx.rect(0, 0, playerCanvas.width, 48);
+    // playerCtx.fillStyle = "rgba(0, 0, 0, .5)";
+    // playerCtx.fill();
 
-    playerCtx.font = "16px sans-serif";
-    playerCtx.fillStyle = "White";
-    playerCtx.fillText("現在の手:", 24, 30);
-    playerCtx.fillText("関節の角度の合計:", playerCanvas.width - 200, 30);
+    // playerCtx.font = "16px sans-serif";
+    // playerCtx.fillStyle = "White";
+    // playerCtx.fillText("現在の手:", 24, 30);
+    // playerCtx.fillText("関節の角度の合計:", playerCanvas.width - 200, 30);
 
 
     playerHand = null;
 
     if (results.multiHandLandmarks) {
         results.multiHandLandmarks.forEach(marks => {
-            drawConnectors(playerCtx, marks, HAND_CONNECTIONS, { color: "#fff", lineWidth: 5 });
+            // drawConnectors(playerCtx, marks, HAND_CONNECTIONS, { color: "#fff", lineWidth: 5 });
             drawLandmarks(playerCtx, marks, { color: "#ff79c6", lineWidth: 5 });
 
             const calc = getTotalJointDeg(marks);
             playerHand = detectPosture(calc);
 
-            playerCtx.fillText(playerHand.name, 102, 30);
-            playerCtx.fillText(Math.floor(calc), playerCanvas.width - 60, 30);
+            // playerCtx.fillText(playerHand.name, 102, 30);
+            debug.textContent = playerHand.name;
         })
     }
 

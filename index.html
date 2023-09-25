@@ -9,34 +9,31 @@
     <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
+
     <div class="frame">
-        
-        <div>
-            <div class="canvas">
-                <video id="video" hidden></video>
-                <canvas class="canvas__body" id="player-canvas"></canvas>
-            </div>
-            <div class="result" id="result"></div>
-        </div>
-        <div>
-            <div class="canvas">
-                <div class="canvas__title">CPU</div>
-                <canvas class="canvas__body" id="cpu-canvas" width="304" height="304"></canvas>
-            </div>
-            
-        </div>
-        <meter class="controller__meter" id="meter" min="0" max="75" value="0"></meter>
+        <video id="video"></video>
+        <canvas id="player-canvas"></canvas>   
+    </div>
+    
+
+    <div class="canvas">
+        <div class="canvas__title">CPU</div>
+        <canvas class="canvas__body" id="cpu-canvas" width="304" height="304"></canvas>
     </div>
 
-    
-    <dialog id="dialog">
-        <h2>設定</h2>
-        <p>使用するカメラを選択： <select id="camera-devices"></select></p>
-        <p style="font-size: .8em;">ブラウザの設定でカメラへのアクセスを許可してください。</p>
-        <p><button id="startBtn" type="button">はじめる</button></p>
-    </dialog>
+    <button id=btnstart>start</button> <button id=btnstop>stop</button>
+    <label><input type=checkbox id=chkback checked>backcamera</label>
+    <label><input type=checkbox id=chkmirror>mirror</label>
+    <meter class="controller__meter" id="meter" min="0" max="75" value="0"></meter>
+    <div id="debug"></div>
+    <div id="debug2"></div>
+    <div class="result" id="result"></div>
+  
+
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="src/script.js"></script>
+    <script type="module" src="src/script.js"></script>
 </body>
 </html>
