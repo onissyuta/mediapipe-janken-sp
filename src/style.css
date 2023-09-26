@@ -88,13 +88,41 @@ p {
 }
 
 .canvas__body {
-    width: 120px;
     display: block;
+    width: 120px;
+    height: 120px;
     margin: auto;
     background: #fff;
     border-radius: 1.5em;
     overflow: hidden;
     box-shadow: var(--shadow);
+}
+
+
+.hands {
+    position: relative;
+    top: 120px;
+}
+
+.hand {
+    width: 120px;
+    height: 120px;
+}
+
+.hand.rock {
+    background: url("img/hand/0.png");
+}
+
+.hand.paper {
+    background: url("img/hand/1.png");
+}
+
+.hand.scissors {
+    background: url("img/hand/2.png");
+}
+
+.hand.anime {
+    background: url("img/hand/anime.gif");
 }
 
 

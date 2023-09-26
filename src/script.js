@@ -9,10 +9,6 @@ let playerHand;
 let isPlaying = false;
 
 
-
-const cpuCanvas = document.getElementById("cpu-canvas");
-const cpuCtx = cpuCanvas.getContext("2d");
-
 const divResult = document.getElementById("result");
 
 
@@ -21,6 +17,8 @@ const canvasElement = document.getElementById("player-canvas");
 const canvasCtx = canvasElement.getContext("2d");
 
 const divCurrentHand = document.getElementById("currentHand");
+
+const divHands = document.getElementById("hands");
 
 
 
@@ -33,6 +31,7 @@ const images = [
     loadImage("src/img/hand/0.png"),
     loadImage("src/img/hand/1.png"),
     loadImage("src/img/hand/2.png"),
+    loadImage("src/img/hand/anime.gif"),
 ];
 
 
@@ -279,38 +278,29 @@ function fetchJankenGame(result) { // result: falseであいこモード
         audio[result ? 0 : 1][0].currentTime = 0;
         audio[result ? 0 : 1][0].play();
 
-        // ルーレット
-        let count = 0;
-        const id = setInterval(() => {
-            cpuCtx.clearRect(0, 0, cpuCanvas.width, cpuCanvas.height);
-            cpuCtx.drawImage(images[count], 0, 0, 120, 120, 0, 0, cpuCanvas.width, cpuCanvas.height);
-            if (++count > 2) count = 0;
-        }, 100);
+        // CPUの手のルーレットを描画
+        divHands.style.top = "-360px";
 
         audio[result ? 0 : 1][0].addEventListener('ended', () => {
-            resolve(id);
+            resolve();
         });
     })
-        .then(id => {
+        .then(() => {
             return new Promise(resolve => {
                 audio[result ? 0 : 1][1].currentTime = 0;
                 audio[result ? 0 : 1][1].play();
 
                 // 手を出す時間を考慮してちょっと待つ
-                setTimeout(() => resolve(id), 400);
+                setTimeout(() => resolve(), 400);
             })
         })
-        .then(id => {
+        .then(() => {
             return new Promise(resolve => {
-                // ルーレット止める
-                clearInterval(id);
-
                 // CPUの手を決定
                 const cpuHand = new Hand(Math.floor(Math.random() * 3));
 
-                // cpuCanvasにCPUの手を描画
-                cpuCtx.clearRect(0, 0, cpuCanvas.width, cpuCanvas.height);
-                cpuCtx.drawImage(images[cpuHand.id], 0, 0, 120, 120, 0, 0, cpuCanvas.width, cpuCanvas.height);
+                // CPUの手を描画
+                divHands.style.top = -120 * cpuHand.id + "px";
 
                 // じゃんけんの勝敗を判定
                 const result = judgeJanken(playerHand, cpuHand);
