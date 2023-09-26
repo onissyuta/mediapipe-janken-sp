@@ -7,31 +7,35 @@
     <title>カメラでじゃんけん</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ress@4.0.0/dist/ress.min.css">
     <link rel="stylesheet" href="src/style.css">
+    <meta name="theme-color" content="#000000">
 </head>
 <body>
-
     <div class="frame">
-        <video id="video"></video>
-        <canvas id="player-canvas"></canvas>   
+        <div class="video-frame">
+            <video id="video" class="video"></video>
+            <canvas id="player-canvas" class="result-canvas"></canvas>   
+        </div>
+        <div class="controller-frame">
+            <div>
+                <h2>画面内タッチでじゃんけん開始！</h2>
+                現在の手： <span id="currentHand"></span>
+            </div>
+            <div class="result" id="result"></div>
+            <div class="canvas">
+                <canvas class="canvas__body" id="cpu-canvas" width="120" height="120"></canvas>
+                <div class="canvas__title">CPU</div>
+            </div>
+
+        </div>
     </div>
-    
 
-    <div class="canvas">
-        <div class="canvas__title">CPU</div>
-        <canvas class="canvas__body" id="cpu-canvas" width="304" height="304"></canvas>
-    </div>
-
-    <button id=btnstart>start</button> <button id=btnstop>stop</button>
-    <label><input type=checkbox id=chkback checked>backcamera</label>
-    <label><input type=checkbox id=chkmirror>mirror</label>
-    <meter class="controller__meter" id="meter" min="0" max="75" value="0"></meter>
-    <div id="debug"></div>
-    <div id="debug2"></div>
-    <div class="result" id="result"></div>
-  
-
-
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script> -->
+    <dialog id="dialog">
+        <h2>カメラでじゃんけん！</h2>
+        <p>使用するカメラを選択： <select id="camera-devices"></select></p>
+        <p style="font-size: .8em;">ブラウザの設定でカメラへのアクセスを許可してください。</p>
+        <p><button id="startBtn" type="button">はじめる</button></p>
+    </dialog>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script type="module" src="src/script.js"></script>

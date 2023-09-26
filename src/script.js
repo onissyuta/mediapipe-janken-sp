@@ -1,28 +1,32 @@
-import { Camera } from "https://code4fukui.github.io/Camera/Camera.js";
+import {
+    HandLandmarker,
+    FilesetResolver
+  } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
 
 
-document.addEventListener("DOMContentLoaded", main, false);
 
 let playerHand;
 let isPlaying = false;
-let tick = 0;
 
-const playerCanvas = document.getElementById("player-canvas");
-const playerCtx = playerCanvas.getContext("2d");
+
 
 const cpuCanvas = document.getElementById("cpu-canvas");
 const cpuCtx = cpuCanvas.getContext("2d");
 
-const meter = document.getElementById("meter");
 const divResult = document.getElementById("result");
 
-const debug = document.querySelector("#debug");
-const debug2 = document.querySelector("#debug2");
+
+const video = document.getElementById("video");
+const canvasElement = document.getElementById("player-canvas"); 
+const canvasCtx = canvasElement.getContext("2d");
+
+const divCurrentHand = document.getElementById("currentHand");
+
 
 
 const audio = [
-    [loadAudio("src/audio/janken.wav"), loadAudio("src/audio/pon.wav")],
-    [loadAudio("src/audio/aikode.wav"), loadAudio("src/audio/sho.wav")]
+    [loadAudio("src/audio/janken.mp3"), loadAudio("src/audio/pon.mp3")],
+    [loadAudio("src/audio/aikode.mp3"), loadAudio("src/audio/sho.mp3")]
 ]
 
 const images = [
@@ -34,132 +38,134 @@ const images = [
 
 
 
-async function main() {
 
-    const windowWidth = document.querySelector("html").clientWidth;
-    const windowHeight = document.querySelector("html").clientHeight;
+// Enable the live webcam view and start detection.
 
-    // const video = document.getElementById("video"); // なくても何故が動く
-    let camera = null;
 
-    
-    if (camera) {
-        await camera.stop();
+const dialog = document.getElementById('dialog');
+const select = document.getElementById('camera-devices');
+
+dialog.showModal();
+
+
+    // カメラの一覧を取得
+    await navigator.mediaDevices.getUserMedia({ video: true, audio: false }) // 権限要求のため一瞬カメラをオンにする
+        .then(stream => {
+            // カメラ停止
+            stream.getTracks().forEach(track => {
+                track.stop();
+            })
+
+            // 入出力デバイスの取得
+            navigator.mediaDevices.enumerateDevices().then(mediaDevices => {
+                console.log(mediaDevices);
+                let count = 1;
+                mediaDevices.forEach(mediaDevice => {
+                    if (mediaDevice.kind === 'videoinput') {
+                        const option = document.createElement('option');
+                        option.value = mediaDevice.deviceId;
+                        const textNode = document.createTextNode(mediaDevice.label || `Camera ${count++}`);
+                        option.appendChild(textNode);
+                        select.appendChild(option);
+                    }
+                });
+            });
+        })
+        .catch(error => alert("エラーが発生しました:\n・カメラアクセスが許可されていません\n・他のアプリでカメラが使用されています"));
+
+
+    // カメラの起動
+    document.getElementById('startBtn').addEventListener('click', async () => {
+        dialog.close();
+        console.log(select.value)
+
+        await navigator.mediaDevices.getUserMedia({
+            video: {
+                deviceId: select.value
+            },
+            audio: false,
+        })
+        .then(
+            stream => {
+                video.srcObject = stream;
+                video.play();
+                video.addEventListener("loadeddata", renderLoop);
+            },
+            error => {
+                alert("エラーが発生しました:\n他のアプリでカメラが使用されています");
+                console.log(error);
+            }
+        )
+    });
+
+
+
+const vision = await FilesetResolver.forVisionTasks(
+    // path/to/wasm/root
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+);
+
+const handLandmarker = await HandLandmarker.createFromOptions(
+    vision,
+    {
+    baseOptions: {
+        modelAssetPath: "./app/shared/models/hand_landmarker.task",
+        delegate: "GPU",
+    },
+    numHands: 1
+});
+
+
+
+
+await handLandmarker.setOptions({ runningMode: "video" });
+let lastVideoTime = -1;
+let results = undefined;
+
+async function renderLoop() {
+    canvasElement.width = video.videoWidth;
+    canvasElement.height = video.videoHeight;
+
+    let startTimeMs = performance.now();
+    if (video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime;
+        results = handLandmarker.detectForVideo(video,startTimeMs);
     }
-    camera = new Camera(video, {
-        onFrame: async () => {
-        // use video element as image
-            await hands.send({ image: video });
-        },
-        backcamera: chkback.checked,
-        fps: 24,
-        width: 360,
-        height: 360
-    });
-    await camera.start();
-    console.log(camera);
 
+    canvasCtx.save();
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    // canvasCtx.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
 
+    if (results.landmarks) {
+      for (const landmarks of results.landmarks) {
+        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+          color: "#00FF00",
+          lineWidth: 5
+        });
+        drawLandmarks(canvasCtx, landmarks, { color: "#FF0000", lineWidth: 2 });
 
-    btnstop.onclick = async () => {
-        debug2.textContent += camera.videoElement.clientWidth;
-        debug2.textContent += camera.videoElement.clientHeight;
+        const calc = getTotalJointDeg(landmarks);
+        playerHand = detectPosture(calc);
 
-        playerCanvas.width = camera.videoElement.clientWidth;
-        playerCanvas.height = camera.videoElement.clientHeight;
+        divCurrentHand.textContent = playerHand.name;
+      }
+    }
+    canvasCtx.restore();
+ 
 
-
-        // if (camera) {
-        //     await camera.stop();
-        //     camera = null;
-        // }
-    };
-    chkback.onchange = async () => {
-        if (camera) {
-            await camera.flip();
-        }
-    };
-    chkmirror.onchange = () => {
-        video.style.transform = chkmirror.checked ? "scale(-1,1)" : "scale(1,1)";
-    };
-
-
-
-
-    // // カメラの初期化
-    // const video = document.getElementById("video");
-    // const camera = new Camera(video, {
-    //     onFrame: async () => {
-    //         await hands.send({ image: video });
-    //     },
-    //     width: 360,
-    //     height: 500,
-    //     backcamera: true,
-    // });
-    // console.log(camera);
-    // camera.start()
-
-
-
-    // handsの初期化
-    const hands = new Hands({
-        locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-    });
-    hands.setOptions({
-        selfieMode: false,
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-
-    hands.onResults(recvResults);
-
+  requestAnimationFrame(renderLoop);
 }
 
 
-function recvResults(results) {
-    playerCtx.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
-    playerCtx.drawImage(results.image, 0, 0, playerCanvas.width, playerCanvas.height);
 
-    // playerCtx.rect(0, 0, playerCanvas.width, 48);
-    // playerCtx.fillStyle = "rgba(0, 0, 0, .5)";
-    // playerCtx.fill();
+document.querySelector(".frame").addEventListener("click", () => playJanken(1));
 
-    // playerCtx.font = "16px sans-serif";
-    // playerCtx.fillStyle = "White";
-    // playerCtx.fillText("現在の手:", 24, 30);
-    // playerCtx.fillText("関節の角度の合計:", playerCanvas.width - 200, 30);
-
-
-    playerHand = null;
-
-    if (results.multiHandLandmarks) {
-        results.multiHandLandmarks.forEach(marks => {
-            // drawConnectors(playerCtx, marks, HAND_CONNECTIONS, { color: "#fff", lineWidth: 5 });
-            drawLandmarks(playerCtx, marks, { color: "#ff79c6", lineWidth: 5 });
-
-            const calc = getTotalJointDeg(marks);
-            playerHand = detectPosture(calc);
-
-            // playerCtx.fillText(playerHand.name, 102, 30);
-            debug.textContent = playerHand.name;
-        })
-    }
-
-    if (playerHand != null && isPlaying == false && playerHand.id == 0) {
-        tick++;
-    } else {
-        tick = 0;
-    }
-
-    if (tick > 75) {
-        tick = 0;
+document.addEventListener("keydown", event => {
+    if (event.code === "Space") {
         playJanken(1);
     }
+});
 
-    meter.value = tick;
-}
 
 function getTotalJointDeg(marks) {
     return vecDeg(vec(marks[1], marks[0]), vec(marks[1], marks[2]))
@@ -277,7 +283,7 @@ function fetchJankenGame(result) { // result: falseであいこモード
         let count = 0;
         const id = setInterval(() => {
             cpuCtx.clearRect(0, 0, cpuCanvas.width, cpuCanvas.height);
-            cpuCtx.drawImage(images[count], 0, 0, 1000, 1000, 0, 0, cpuCanvas.width, cpuCanvas.height);
+            cpuCtx.drawImage(images[count], 0, 0, 120, 120, 0, 0, cpuCanvas.width, cpuCanvas.height);
             if (++count > 2) count = 0;
         }, 100);
 
@@ -304,7 +310,7 @@ function fetchJankenGame(result) { // result: falseであいこモード
 
                 // cpuCanvasにCPUの手を描画
                 cpuCtx.clearRect(0, 0, cpuCanvas.width, cpuCanvas.height);
-                cpuCtx.drawImage(images[cpuHand.id], 0, 0, 1000, 1000, 0, 0, cpuCanvas.width, cpuCanvas.height);
+                cpuCtx.drawImage(images[cpuHand.id], 0, 0, 120, 120, 0, 0, cpuCanvas.width, cpuCanvas.height);
 
                 // じゃんけんの勝敗を判定
                 const result = judgeJanken(playerHand, cpuHand);
