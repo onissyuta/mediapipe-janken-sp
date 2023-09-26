@@ -272,11 +272,14 @@ audioElements.forEach(elm => {
 
 
 
+const body = document.querySelector("body");
+
 function fetchJankenGame(result) { // result: falseであいこモード
     return new Promise(resolve => {
         divResult.textContent = "";
         divResult.dataset.result = "";
 
+        body.style.backgroundColor = "#ff0000";
 
         // check if context is in suspended state (autoplay policy)
         if (audioContext.state === "suspended") {
@@ -284,7 +287,6 @@ function fetchJankenGame(result) { // result: falseであいこモード
         }
 
         audioElements[0].play();
-
 
         // CPUの手のルーレットを描画
         divHands.style.top = "-360px";
@@ -297,7 +299,10 @@ function fetchJankenGame(result) { // result: falseであいこモード
         .then(() => {
             return new Promise(resolve => {
      
-                audioElements[1].play();
+            body.style.backgroundColor = "#00ff00";
+
+            audioElements[1].play();
+
 
                 // 手を出す時間を考慮してちょっと待つ
                 setTimeout(() => resolve(), 400);
@@ -305,6 +310,7 @@ function fetchJankenGame(result) { // result: falseであいこモード
         })
         .then(() => {
             return new Promise(resolve => {
+                body.style.backgroundColor = "#0000ff";
                 
                 // CPUの手を決定
                 const cpuHand = new Hand(Math.floor(Math.random() * 3));
@@ -321,7 +327,11 @@ function fetchJankenGame(result) { // result: falseであいこモード
                 divResult.textContent = resultName[result];
 
                 // 1秒待って終了
-                setTimeout(() => resolve(result), 1500);
+                setTimeout(() => {
+                    body.style.backgroundColor = "#000000";
+
+                    resolve(result)
+                }, 1500);
             })
         });
 }
