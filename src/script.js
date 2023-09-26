@@ -21,23 +21,6 @@ const divCurrentHand = document.getElementById("currentHand");
 const divHands = document.getElementById("hands");
 
 
-
-const audio = [
-    [loadAudio("src/audio/janken.mp3"), loadAudio("src/audio/pon.mp3")],
-    [loadAudio("src/audio/aikode.mp3"), loadAudio("src/audio/sho.mp3")]
-]
-
-const images = [
-    loadImage("src/img/hand/0.png"),
-    loadImage("src/img/hand/1.png"),
-    loadImage("src/img/hand/2.png"),
-    loadImage("src/img/hand/anime.gif"),
-];
-
-
-
-
-
 // Enable the live webcam view and start detection.
 
 
@@ -255,19 +238,38 @@ function Hand(id) {
 
 
 async function playJanken(num) {
-    if (!isPlaying) { // 多重起動防止
-        isPlaying = true;
-
-        let result = 1;
-        for (let i = 0; i < num; i++) {
-            do {
-                result = await fetchJankenGame(result);
-            } while (!result); // あいこじゃ なくなるまで
-        }
-
-        isPlaying = false;
+    if (isPlaying) { // 多重起動防止
+        return
     }
+
+    isPlaying = true;
+
+    let result = 1;
+    for (let i = 0; i < num; i++) {
+        do {
+            result = await fetchJankenGame(result);
+        } while (!result); // あいこじゃ なくなるまで
+    }
+
+    isPlaying = false;
 }
+
+
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+const audioContext = new AudioContext();
+
+// get the audio element
+const audioElements = document.querySelectorAll("audio");
+
+// pass it into the audio context
+
+
+audioElements.forEach(elm => {
+    const track = audioContext.createMediaElementSource(elm);
+    track.connect(audioContext.destination);
+});
+
 
 
 function fetchJankenGame(result) { // result: falseであいこモード
@@ -275,20 +277,27 @@ function fetchJankenGame(result) { // result: falseであいこモード
         divResult.textContent = "";
         divResult.dataset.result = "";
 
-        audio[result ? 0 : 1][0].currentTime = 0;
-        audio[result ? 0 : 1][0].play();
+
+        // check if context is in suspended state (autoplay policy)
+        if (audioContext.state === "suspended") {
+            audioContext.resume();
+        }
+
+        audioElements[0].play();
+
 
         // CPUの手のルーレットを描画
         divHands.style.top = "-360px";
 
-        audio[result ? 0 : 1][0].addEventListener('ended', () => {
+
+        audioElements[0].addEventListener('ended', () => {
             resolve();
         });
     })
         .then(() => {
             return new Promise(resolve => {
-                audio[result ? 0 : 1][1].currentTime = 0;
-                audio[result ? 0 : 1][1].play();
+     
+                audioElements[1].play();
 
                 // 手を出す時間を考慮してちょっと待つ
                 setTimeout(() => resolve(), 400);
@@ -296,6 +305,7 @@ function fetchJankenGame(result) { // result: falseであいこモード
         })
         .then(() => {
             return new Promise(resolve => {
+                
                 // CPUの手を決定
                 const cpuHand = new Hand(Math.floor(Math.random() * 3));
 
@@ -311,7 +321,7 @@ function fetchJankenGame(result) { // result: falseであいこモード
                 divResult.textContent = resultName[result];
 
                 // 1秒待って終了
-                setTimeout(() => resolve(result), 1000);
+                setTimeout(() => resolve(result), 1500);
             })
         });
 }
