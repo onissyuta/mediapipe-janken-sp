@@ -11,7 +11,6 @@ let isPlaying = false;
 
 const divResult = document.getElementById("result");
 
-
 const video = document.getElementById("video");
 const canvasElement = document.getElementById("player-canvas"); 
 const canvasCtx = canvasElement.getContext("2d");
@@ -20,12 +19,27 @@ const divCurrentHand = document.getElementById("currentHand");
 
 const divHands = document.getElementById("hands");
 
-
-// Enable the live webcam view and start detection.
+const body = document.querySelector("body");
 
 
 const dialog = document.getElementById('dialog');
 const select = document.getElementById('camera-devices');
+
+
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+const audioContext = new AudioContext();
+
+// get the audio element
+const audioElements = document.querySelectorAll("audio");
+
+// pass it into the audio context
+
+audioElements.forEach(elm => {
+    const track = audioContext.createMediaElementSource(elm);
+    track.connect(audioContext.destination);
+});
+
 
 dialog.showModal();
 
@@ -118,6 +132,9 @@ async function renderLoop() {
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     // canvasCtx.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
 
+
+    playerHand = null;
+
     if (results.landmarks) {
       for (const landmarks of results.landmarks) {
         drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
@@ -130,12 +147,12 @@ async function renderLoop() {
         playerHand = detectPosture(calc);
 
         divCurrentHand.textContent = playerHand.name;
+
       }
     }
     canvasCtx.restore();
- 
 
-  requestAnimationFrame(renderLoop);
+    requestAnimationFrame(renderLoop);
 }
 
 
@@ -255,53 +272,31 @@ async function playJanken(num) {
 }
 
 
-const AudioContext = window.AudioContext || window.webkitAudioContext;
-
-const audioContext = new AudioContext();
-
-// get the audio element
-const audioElements = document.querySelectorAll("audio");
-
-// pass it into the audio context
-
-
-audioElements.forEach(elm => {
-    const track = audioContext.createMediaElementSource(elm);
-    track.connect(audioContext.destination);
-});
-
-
-
-const body = document.querySelector("body");
 
 function fetchJankenGame(result) { // result: falseであいこモード
     return new Promise(resolve => {
         divResult.textContent = "";
         divResult.dataset.result = "";
 
-        body.style.backgroundColor = "#ff0000";
-
         // check if context is in suspended state (autoplay policy)
         if (audioContext.state === "suspended") {
             audioContext.resume();
         }
 
-        audioElements[0].play();
+        audioElements[result ? 0 : 2].play();
 
         // CPUの手のルーレットを描画
         divHands.style.top = "-360px";
 
 
-        audioElements[0].addEventListener('ended', () => {
+        audioElements[result ? 0 : 2].addEventListener('ended', () => {
             resolve();
         });
     })
         .then(() => {
             return new Promise(resolve => {
      
-            body.style.backgroundColor = "#00ff00";
-
-            audioElements[1].play();
+                audioElements[result ? 1 : 3].play();
 
 
                 // 手を出す時間を考慮してちょっと待つ
@@ -310,8 +305,7 @@ function fetchJankenGame(result) { // result: falseであいこモード
         })
         .then(() => {
             return new Promise(resolve => {
-                body.style.backgroundColor = "#0000ff";
-                
+     
                 // CPUの手を決定
                 const cpuHand = new Hand(Math.floor(Math.random() * 3));
 
@@ -321,32 +315,20 @@ function fetchJankenGame(result) { // result: falseであいこモード
                 // じゃんけんの勝敗を判定
                 const result = judgeJanken(playerHand, cpuHand);
 
+                
                 // 勝敗を描画
                 const resultName = ["引き分け", "負け", "勝ち"];
-                divResult.dataset.result = result;
+                body.dataset.result = result;
+
                 divResult.textContent = resultName[result];
 
                 // 1秒待って終了
                 setTimeout(() => {
-                    body.style.backgroundColor = "#000000";
+                    divResult.textContent = null;
+                    body.dataset.result = null;
 
                     resolve(result)
                 }, 1500);
             })
         });
-}
-
-
-function loadImage(src) {
-    const imageIns = new Image();
-    imageIns.src = src;
-    return imageIns;
-}
-
-
-function loadAudio(src) {
-    const audioIns = new Audio();
-    audioIns.src = src;
-    audioIns.load();
-    return audioIns;
 }

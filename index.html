@@ -11,13 +11,15 @@
 </head>
 <body>
     <div class="frame">
-        <div class="video-frame">
-            <video id="video" class="video"></video>
-            <canvas id="player-canvas" class="result-canvas"></canvas>   
+        <div class="result-frame">
+            <div class="video-frame">
+                <video id="video" class="video" muted autoplay playsinline></video>
+                <canvas id="player-canvas" class="result-canvas"></canvas> 
+            </div>
         </div>
         <div class="controller-frame">
             <div>
-                <h2>画面内タッチでじゃんけん開始！</h2>
+                <h2>画面タッチでじゃんけん開始！</h2>
                 現在の手： <span id="currentHand"></span>
             </div>
             <div class="result" id="result"></div>
