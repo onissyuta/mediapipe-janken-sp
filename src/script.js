@@ -1,86 +1,99 @@
 import {
     HandLandmarker,
     FilesetResolver
-  } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
-
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
 
 
 let playerHand;
 let isPlaying = false;
 
 
-const divResult = document.getElementById("result");
-
 const video = document.getElementById("video");
-const canvasElement = document.getElementById("player-canvas"); 
+const canvasElement = document.getElementById("canvas");
 const canvasCtx = canvasElement.getContext("2d");
 
-const divCurrentHand = document.getElementById("currentHand");
-
-const divHands = document.getElementById("hands");
-
 const body = document.querySelector("body");
-
+const divCurrentHand = document.getElementById("currentHand");
+const divResult = document.getElementById("result");
+const roulette = document.getElementById("roulette");
 
 const dialog = document.getElementById('dialog');
 const select = document.getElementById('camera-devices');
 
 
+// 音声の初期化
 const AudioContext = window.AudioContext || window.webkitAudioContext;
-
 const audioContext = new AudioContext();
 
-// get the audio element
-const audioElements = document.querySelectorAll("audio");
+const audioElements = document.querySelectorAll("audio"); // get the audio element
 
 // pass it into the audio context
-
 audioElements.forEach(elm => {
     const track = audioContext.createMediaElementSource(elm);
     track.connect(audioContext.destination);
 });
 
 
+
+// Mediapipeの初期化
+const vision = await FilesetResolver.forVisionTasks(
+    // path/to/wasm/root
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+);
+
+const handLandmarker = await HandLandmarker.createFromOptions(
+    vision,
+    {
+        baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+            delegate: "GPU",
+        },
+        runningMode: "VIDEO",
+        numHands: 1
+    });
+
+
+
 dialog.showModal();
 
 
-    // カメラの一覧を取得
-    await navigator.mediaDevices.getUserMedia({ video: true, audio: false }) // 権限要求のため一瞬カメラをオンにする
-        .then(stream => {
-            // カメラ停止
-            stream.getTracks().forEach(track => {
-                track.stop();
-            })
+// カメラの一覧を取得
+await navigator.mediaDevices.getUserMedia({ video: true, audio: false }) // 権限要求のため一瞬カメラをオンにする
+    .then(stream => {
+        // カメラ停止
+        stream.getTracks().forEach(track => {
+            track.stop();
+        })
 
-            // 入出力デバイスの取得
-            navigator.mediaDevices.enumerateDevices().then(mediaDevices => {
-                console.log(mediaDevices);
-                let count = 1;
-                mediaDevices.forEach(mediaDevice => {
-                    if (mediaDevice.kind === 'videoinput') {
-                        const option = document.createElement('option');
-                        option.value = mediaDevice.deviceId;
-                        const textNode = document.createTextNode(mediaDevice.label || `Camera ${count++}`);
-                        option.appendChild(textNode);
-                        select.appendChild(option);
-                    }
-                });
+        // 入出力デバイスの取得
+        navigator.mediaDevices.enumerateDevices().then(mediaDevices => {
+            console.log(mediaDevices);
+            let count = 1;
+            mediaDevices.forEach(mediaDevice => {
+                if (mediaDevice.kind === 'videoinput') {
+                    const option = document.createElement('option');
+                    option.value = mediaDevice.deviceId;
+                    const textNode = document.createTextNode(mediaDevice.label || `Camera ${count++}`);
+                    option.appendChild(textNode);
+                    select.appendChild(option);
+                }
             });
-        })
-        .catch(error => alert("エラーが発生しました:\n・カメラアクセスが許可されていません\n・他のアプリでカメラが使用されています"));
+        });
+    })
+    .catch(error => alert("エラーが発生しました:\n・カメラアクセスが許可されていません\n・他のアプリでカメラが使用されています"));
 
 
-    // カメラの起動
-    document.getElementById('startBtn').addEventListener('click', async () => {
-        dialog.close();
-        console.log(select.value)
+// カメラの起動
+document.getElementById('startBtn').addEventListener('click', async () => {
+    dialog.close();
+    console.log(select.value)
 
-        await navigator.mediaDevices.getUserMedia({
-            video: {
-                deviceId: select.value
-            },
-            audio: false,
-        })
+    await navigator.mediaDevices.getUserMedia({
+        video: {
+            deviceId: select.value
+        },
+        audio: false,
+    })
         .then(
             stream => {
                 video.srcObject = stream;
@@ -92,29 +105,10 @@ dialog.showModal();
                 console.log(error);
             }
         )
-    });
-
-
-
-const vision = await FilesetResolver.forVisionTasks(
-    // path/to/wasm/root
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-);
-
-const handLandmarker = await HandLandmarker.createFromOptions(
-    vision,
-    {
-    baseOptions: {
-        modelAssetPath: "./app/shared/models/hand_landmarker.task",
-        delegate: "GPU",
-    },
-    numHands: 1
 });
 
 
 
-
-await handLandmarker.setOptions({ runningMode: "video" });
 let lastVideoTime = -1;
 let results = undefined;
 
@@ -125,7 +119,7 @@ async function renderLoop() {
     let startTimeMs = performance.now();
     if (video.currentTime !== lastVideoTime) {
         lastVideoTime = video.currentTime;
-        results = handLandmarker.detectForVideo(video,startTimeMs);
+        results = handLandmarker.detectForVideo(video, startTimeMs);
     }
 
     canvasCtx.save();
@@ -136,20 +130,18 @@ async function renderLoop() {
     playerHand = null;
 
     if (results.landmarks) {
-      for (const landmarks of results.landmarks) {
-        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-          color: "#00FF00",
-          lineWidth: 5
-        });
-        drawLandmarks(canvasCtx, landmarks, { color: "#FF0000", lineWidth: 2 });
+        for (const landmarks of results.landmarks) {
+            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+                color: "#fff",
+                lineWidth: 5
+            });
+            drawLandmarks(canvasCtx, landmarks, { color: "#ff79c6", lineWidth: 2 });
 
-        const calc = getTotalJointDeg(landmarks);
-        playerHand = detectPosture(calc);
-
-        divCurrentHand.textContent = playerHand.name;
-
-      }
+            playerHand = detectPosture(getTotalJointDeg(landmarks));        
+        }
     }
+
+    divCurrentHand.textContent = playerHand != null ? playerHand.name : "";
     canvasCtx.restore();
 
     requestAnimationFrame(renderLoop);
@@ -286,7 +278,7 @@ function fetchJankenGame(result) { // result: falseであいこモード
         audioElements[result ? 0 : 2].play();
 
         // CPUの手のルーレットを描画
-        divHands.style.top = "-360px";
+        roulette.style.top = "-360px";
 
 
         audioElements[result ? 0 : 2].addEventListener('ended', () => {
@@ -295,7 +287,7 @@ function fetchJankenGame(result) { // result: falseであいこモード
     })
         .then(() => {
             return new Promise(resolve => {
-     
+
                 audioElements[result ? 1 : 3].play();
 
 
@@ -305,17 +297,17 @@ function fetchJankenGame(result) { // result: falseであいこモード
         })
         .then(() => {
             return new Promise(resolve => {
-     
+
                 // CPUの手を決定
                 const cpuHand = new Hand(Math.floor(Math.random() * 3));
 
                 // CPUの手を描画
-                divHands.style.top = -120 * cpuHand.id + "px";
+                roulette.style.top = -120 * cpuHand.id + "px";
 
                 // じゃんけんの勝敗を判定
                 const result = judgeJanken(playerHand, cpuHand);
 
-                
+
                 // 勝敗を描画
                 const resultName = ["引き分け", "負け", "勝ち"];
                 body.dataset.result = result;

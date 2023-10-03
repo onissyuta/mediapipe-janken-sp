@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,12 +10,13 @@
     <link rel="stylesheet" href="src/style.css">
     <meta name="theme-color" content="#000000">
 </head>
+
 <body>
     <div class="frame">
-        <div class="result-frame">
+        <div class="video-outer-frame">
             <div class="video-frame">
                 <video id="video" class="video" muted autoplay playsinline></video>
-                <canvas id="player-canvas" class="result-canvas"></canvas> 
+                <canvas id="canvas" class="canvas"></canvas>
             </div>
         </div>
         <div class="controller-frame">
@@ -23,16 +25,16 @@
                 現在の手： <span id="currentHand"></span>
             </div>
             <div class="result" id="result"></div>
-            <div class="canvas">
-                <div class="canvas__body" id="cpu-canvas" width="120" height="120">
-                    <div class="hands" id="hands">
+            <div class="roulette">
+                <div class="roulette__body" width="120" height="120">
+                    <div class="roulette__inner" id="roulette">
                         <div class="hand rock"></div>
                         <div class="hand paper"></div>
                         <div class="hand scissors"></div>
                         <div class="hand anime"></div>
                     </div>
                 </div>
-                <div class="canvas__title">CPU</div>
+                <div class="roulette__label">CPU</div>
             </div>
 
         </div>
@@ -48,9 +50,9 @@
     <audio src="src/audio/pon.mp3" type="audio/mpeg"></audio>
     <audio src="src/audio/aikode.mp3" type="audio/mpeg"></audio>
     <audio src="src/audio/sho.mp3" type="audio/mpeg"></audio>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script type="module" src="src/script.js"></script>
 </body>
+
 </html>

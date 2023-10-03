@@ -9,10 +9,22 @@ body {
     font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
 }
 
+body[data-result="0"] {
+    background: orange;
+}
+
+
+body[data-result="1"] {
+    background: red;
+}
+
+body[data-result="2"] {
+    background: green;
+}
+
 p {
     margin: 1em 0;
 }
-
 
 
 .frame {
@@ -20,7 +32,7 @@ p {
     position: relative;
 }
 
-.result-frame {
+.video-outer-frame {
     width: 100%;
     min-height: 100%;
     position: absolute;
@@ -34,7 +46,8 @@ p {
 
 .video-frame {
     width: 100vw;
-    max-width: 640px; /* TODO: 仮 */
+    max-width: 640px;
+    /* TODO: 仮 */
     position: relative;
 }
 
@@ -43,7 +56,7 @@ p {
     width: 100%;
 }
 
-.result-canvas {
+.canvas {
     width: 100%;
     position: absolute;
     top: 0;
@@ -66,33 +79,12 @@ p {
 }
 
 
-
-
 .result {
     font-size: 3em;
     line-height: 1;
     font-weight: bold;
     text-align: center;
 }
-
-
-body[data-result="0"] {
-    background: orange;
-}
-
-
-body[data-result="1"] {
-    background: red;
-}
-
-
-body[data-result="2"] {
-    background: green;
-}
-
-
-
-
 
 [data-result="0"] .result {
     color: orange;
@@ -106,16 +98,14 @@ body[data-result="2"] {
     color: green;
 }
 
-.canvas {
-}
 
-.canvas__title {
+.roulette__label {
     font-size: 2em;
     font-weight: bold;
     text-align: center;
 }
 
-.canvas__body {
+.roulette__body {
     display: block;
     width: 120px;
     height: 120px;
@@ -127,7 +117,7 @@ body[data-result="2"] {
 }
 
 
-.hands {
+.roulette__inner {
     position: relative;
     top: 120px;
 }
