@@ -23,7 +23,7 @@ body[data-result="2"] {
 }
 
 p {
-    margin: 1em 0;
+    margin: 1.5em 0;
 }
 
 
@@ -165,11 +165,14 @@ select {
     border: 1px solid #aaa;
 }
 
+input[type="checkbox"] {
+    margin: 0 .5em 0 0;
+}
+
 
 button {
     display: block;
     width: 100%;
-    margin: 1em 0 0 0;
     background: #7e00ff;
     color: #fff !important;
     padding: .75em 2em;

@@ -66,6 +66,7 @@ await navigator.mediaDevices.getUserMedia({ video: true, audio: false }) // 権�
 // カメラの起動
 document.getElementById('startBtn').addEventListener('click', async () => {
     dialog.close();
+    const isLightMode = !document.getElementById('lightMode').checked;
     console.log(select.value)
 
     await navigator.mediaDevices.getUserMedia({
@@ -78,7 +79,12 @@ document.getElementById('startBtn').addEventListener('click', async () => {
             stream => {
                 video.srcObject = stream;
                 video.play();
-                video.addEventListener("loadeddata", renderLoop);
+
+                if(isLightMode){
+                    video.addEventListener("loadeddata", renderLoopLight);
+                } else {
+                    video.addEventListener("loadeddata", renderLoop);
+                }
             },
             error => {
                 alert("エラーが発生しました:\n他のアプリでカメラが使用されています");
@@ -145,6 +151,25 @@ async function renderLoop() {
     requestAnimationFrame(renderLoop);
 }
 
+
+async function renderLoopLight() {
+    let startTimeMs = performance.now();
+    if (video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime;
+        results = handLandmarker.detectForVideo(video, startTimeMs);
+    }
+
+    playerHand = null;
+
+    if (results.landmarks) {
+        for (const landmarks of results.landmarks) {
+            playerHand = detectPosture(getTotalJointDeg(landmarks));        
+        }
+    }
+
+    divCurrentHand.textContent = playerHand != null ? playerHand.name : "";
+    requestAnimationFrame(renderLoopLight);
+}
 
 
 document.querySelector(".frame").addEventListener("click", () => playJanken(1));
